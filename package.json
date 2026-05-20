@@ -6,11 +6,13 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "db:seed": "node --env-file=.env supabase/seed.js",
     "lint": "eslint .",
     "preview": "vite preview",
     "serve:chat": "npm run build && node server.mjs"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.106.1",
     "lucide-react": "^1.16.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6"
