@@ -441,7 +441,7 @@ function ChatbotWidget() {
         {
           role: 'assistant',
           content:
-            'Aun no estoy conectado al servidor de IA. Para activar el chat, configura OPENAI_API_KEY en el servidor y ejecuta npm run serve:chat.',
+            'Aun no estoy conectado al servidor de IA. Para activarme en Vercel, configura OPENAI_API_KEY en las variables de entorno y vuelve a desplegar.',
         },
       ])
     } finally {
