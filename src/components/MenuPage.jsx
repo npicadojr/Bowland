@@ -37,15 +37,11 @@ function MenuPage() {
     <main className="menu-page" id="menu">
       <section className="menu-page-hero">
         <div>
-          <h1>Menú Bowland</h1>
+          <h1>Menu Bowland</h1>
           <p>
             Todos los productos del menú digital actual de Bowland Panamá,
             organizados para buscar rápido por categoría.
           </p>
-        </div>
-        <div className="menu-stat">
-          <strong>{products.length}</strong>
-          <span>productos</span>
         </div>
       </section>
 

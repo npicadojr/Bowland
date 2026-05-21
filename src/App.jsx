@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import Header from './components/Header'
 import MenuPage from './components/MenuPage'
+import PromotionsPage from './components/PromotionsPage'
 import ContactPage from './components/ContactPage'
 import AdminPage from './components/AdminPage'
 import ChatbotWidget from './components/ChatbotWidget'
@@ -10,7 +11,9 @@ const resolveView = () => {
   const hash = window.location.hash.replace('#', '')
   return hash === 'menu'
     ? 'menu'
-    : hash === 'contacto'
+    : hash === 'promociones'
+      ? 'promotions'
+      : hash === 'contacto'
       ? 'contact'
       : hash === 'admin'
         ? 'admin'
@@ -34,6 +37,8 @@ function App() {
       <Header activeView={view} setView={setView}>
         {view === 'menu' ? (
           <MenuPage />
+        ) : view === 'promotions' ? (
+          <PromotionsPage />
         ) : view === 'contact' ? (
           <ContactPage />
         ) : view === 'admin' ? (

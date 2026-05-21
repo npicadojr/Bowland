@@ -51,6 +51,7 @@ const galleryPhotos = [
 const viewHashes = {
   home: 'inicio',
   menu: 'menu',
+  promotions: 'promociones',
   contact: 'contacto',
   admin: 'admin',
 }
@@ -206,6 +207,13 @@ function Header({ activeView, children, setView }) {
             onClick={() => goTo('menu')}
           >
             Menu
+          </button>
+          <button
+            className={activeView === 'promotions' ? 'active' : ''}
+            type="button"
+            onClick={() => goTo('promotions')}
+          >
+            Promociones
           </button>
           <button
             className={activeView === 'contact' ? 'active' : ''}

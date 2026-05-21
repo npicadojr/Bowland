@@ -20,7 +20,6 @@ function ContactPage() {
             informacion general, usa los canales de contacto oficiales.
           </p>
         </div>
-        <img src={brand.logo} alt="Bowland Panama" />
       </section>
 
       <section className="contact-layout" aria-label="Informacion de contacto">

@@ -23,6 +23,19 @@ create table menu_admins (
   created_at timestamptz default now()
 );
 
+create table if not exists promotions (
+  id uuid primary key default gen_random_uuid(),
+  title text not null,
+  description text,
+  image_url text,
+  type text not null check (type in ('discount', 'event')),
+  starts_at date not null,
+  expires_at date not null,
+  active boolean default true,
+  created_at timestamptz default now(),
+  constraint promotions_valid_dates check (expires_at >= starts_at)
+);
+
 create or replace function is_menu_admin()
 returns boolean
 language sql
@@ -41,12 +54,19 @@ $$;
 alter table menu_categories enable row level security;
 alter table menu_products enable row level security;
 alter table menu_admins enable row level security;
+alter table promotions enable row level security;
 
 create policy "public read categories"
   on menu_categories for select using (true);
 
 create policy "public read products"
   on menu_products for select using (true);
+
+drop policy if exists "public read promotions" on promotions;
+drop policy if exists "menu admins manage promotions" on promotions;
+
+create policy "public read promotions"
+  on promotions for select using (true);
 
 create policy "menu admins manage categories"
   on menu_categories for all
@@ -56,6 +76,12 @@ create policy "menu admins manage categories"
 
 create policy "menu admins manage products"
   on menu_products for all
+  to authenticated
+  using (is_menu_admin())
+  with check (is_menu_admin());
+
+create policy "menu admins manage promotions"
+  on promotions for all
   to authenticated
   using (is_menu_admin())
   with check (is_menu_admin());
@@ -70,10 +96,19 @@ values ('menu-product-images', 'menu-product-images', true)
 on conflict (id) do update
 set public = excluded.public;
 
+insert into storage.buckets (id, name, public)
+values ('promotion-images', 'promotion-images', true)
+on conflict (id) do update
+set public = excluded.public;
+
 drop policy if exists "public read menu product images" on storage.objects;
 drop policy if exists "menu admins upload product images" on storage.objects;
 drop policy if exists "menu admins update product images" on storage.objects;
 drop policy if exists "menu admins delete product images" on storage.objects;
+drop policy if exists "public read promotion images" on storage.objects;
+drop policy if exists "menu admins upload promotion images" on storage.objects;
+drop policy if exists "menu admins update promotion images" on storage.objects;
+drop policy if exists "menu admins delete promotion images" on storage.objects;
 
 create policy "public read menu product images"
   on storage.objects for select
@@ -94,3 +129,23 @@ create policy "menu admins delete product images"
   on storage.objects for delete
   to authenticated
   using (bucket_id = 'menu-product-images' and public.is_menu_admin());
+
+create policy "public read promotion images"
+  on storage.objects for select
+  using (bucket_id = 'promotion-images');
+
+create policy "menu admins upload promotion images"
+  on storage.objects for insert
+  to authenticated
+  with check (bucket_id = 'promotion-images' and public.is_menu_admin());
+
+create policy "menu admins update promotion images"
+  on storage.objects for update
+  to authenticated
+  using (bucket_id = 'promotion-images' and public.is_menu_admin())
+  with check (bucket_id = 'promotion-images' and public.is_menu_admin());
+
+create policy "menu admins delete promotion images"
+  on storage.objects for delete
+  to authenticated
+  using (bucket_id = 'promotion-images' and public.is_menu_admin());

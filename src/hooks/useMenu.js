@@ -119,8 +119,9 @@ export function useMenu() {
       if (!hasSupabaseConfig) return
 
       const { supabase } = await import('../lib/supabaseClient')
+      const channelName = `public-menu-updates-${Date.now()}-${Math.random()}`
       menuChannel = supabase
-        .channel('public-menu-updates')
+        .channel(channelName)
         .on(
           'postgres_changes',
           { event: '*', schema: 'public', table: 'menu_categories' },

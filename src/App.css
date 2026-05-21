@@ -89,7 +89,7 @@ img {
   display: grid;
   grid-template-columns: auto 1fr;
   align-items: center;
-  width: min(1120px, calc(100% - 32px));
+  width: min(1180px, calc(100% - 40px));
   min-height: 70px;
   padding: 10px 12px 10px 18px;
   border: 1px solid var(--line);
@@ -527,7 +527,7 @@ main {
 
 .menu-page-hero {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr);
   gap: 34px;
   align-items: end;
   padding-bottom: 32px;
@@ -551,32 +551,6 @@ main {
   color: var(--muted);
   font-size: 1.1rem;
   line-height: 1.65;
-}
-
-.menu-stat {
-  display: grid;
-  min-width: 172px;
-  padding: 22px;
-  border: 1px solid rgba(106, 228, 182, 0.34);
-  border-radius: var(--radius);
-  background:
-    linear-gradient(135deg, rgba(236, 0, 255, 0.18), rgba(106, 228, 182, 0.1)),
-    rgba(18, 9, 24, 0.9);
-}
-
-.menu-stat strong {
-  color: var(--mint);
-  font-size: 3.6rem;
-  font-weight: 950;
-  line-height: 0.9;
-}
-
-.menu-stat span {
-  margin-top: 8px;
-  color: var(--white);
-  font-size: 0.9rem;
-  font-weight: 900;
-  text-transform: uppercase;
 }
 
 .menu-browser {
@@ -822,11 +796,12 @@ main {
 
 .contact-hero {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr);
   gap: 32px;
-  align-items: end;
+  justify-items: center;
   padding-bottom: 32px;
   border-bottom: 1px solid var(--line);
+  text-align: center;
 }
 
 .contact-hero h1 {
@@ -913,6 +888,197 @@ main {
   line-height: 1.25;
 }
 
+.promotions-page {
+  width: min(1180px, calc(100% - 40px));
+  margin: 0 auto;
+  padding: 142px 0 94px;
+}
+
+.promotions-hero {
+  display: grid;
+  justify-items: center;
+  padding-bottom: 32px;
+  border-bottom: 1px solid var(--line);
+  text-align: center;
+}
+
+.promotions-hero h1 {
+  margin: 0;
+  color: var(--white);
+  font-size: clamp(3.7rem, 8vw, 8rem);
+  font-weight: 950;
+  line-height: 0.92;
+  text-transform: uppercase;
+  text-shadow: 0 0 28px rgba(236, 0, 255, 0.44);
+}
+
+.promotions-hero p {
+  max-width: 720px;
+  margin: 22px 0 0;
+  color: var(--muted);
+  font-size: 1.1rem;
+  line-height: 1.65;
+}
+
+.promotions-tabs,
+.admin-section-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.promotions-tabs {
+  padding: 28px 0 18px;
+}
+
+.promotions-tabs button,
+.admin-section-tabs button {
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  transition:
+    color 180ms ease,
+    background 180ms ease,
+    border-color 180ms ease;
+}
+
+.promotions-tabs button.active,
+.promotions-tabs button:hover,
+.admin-section-tabs button.active,
+.admin-section-tabs button:hover {
+  border-color: rgba(236, 0, 255, 0.76);
+  color: var(--white);
+  background: linear-gradient(135deg, rgba(236, 0, 255, 0.26), rgba(56, 189, 248, 0.14));
+}
+
+.promotions-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.promotion-card {
+  display: grid;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(14, 9, 20, 0.9);
+  overflow: hidden;
+}
+
+.promotion-card img {
+  width: 100%;
+  aspect-ratio: 1.28 / 1;
+  object-fit: cover;
+  background: #190d21;
+}
+
+.promotion-card-body {
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  min-height: 248px;
+  padding: 18px;
+}
+
+.promotion-type,
+.promotion-meta,
+.admin-promotion-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.promotion-type {
+  color: var(--mint);
+  font-size: 0.76rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.promotion-card-body h2 {
+  margin: 10px 0 8px;
+  color: var(--white);
+  font-size: 1.3rem;
+  line-height: 1.1;
+}
+
+.promotion-card-body p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+
+.promotion-meta {
+  flex-wrap: wrap;
+  justify-content: space-between;
+  margin-top: 18px;
+  color: var(--white);
+  font-size: 0.86rem;
+  font-weight: 850;
+}
+
+.promotion-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.promotion-meta svg {
+  color: var(--mint);
+}
+
+.promotion-meta strong {
+  padding: 7px 9px;
+  border-radius: var(--radius);
+  color: #26002b;
+  background: var(--gold);
+  font-size: 0.72rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.promotions-empty {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.055);
+  font-weight: 850;
+  text-align: center;
+}
+
+.promotion-skeleton {
+  min-height: 420px;
+}
+
+.promotion-skeleton div,
+.promotion-skeleton span {
+  display: block;
+  margin: 18px;
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.14);
+  animation: menu-skeleton-pulse 1.2s ease-in-out infinite;
+}
+
+.promotion-skeleton div {
+  height: 180px;
+  margin: 0;
+}
+
+.promotion-skeleton span {
+  height: 120px;
+}
+
 .admin-page {
   width: min(1120px, calc(100% - 40px));
   margin: 0 auto;
@@ -972,6 +1138,10 @@ main {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+}
+
+.admin-section-tabs {
+  margin-bottom: 18px;
 }
 
 .admin-layout {
@@ -1099,6 +1269,41 @@ main {
     border-color 180ms ease,
     background 180ms ease,
     transform 180ms ease;
+}
+
+.admin-promotion-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
+  gap: 10px;
+  align-items: center;
+  min-height: 78px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.055);
+  transition:
+    border-color 180ms ease,
+    background 180ms ease,
+    transform 180ms ease;
+}
+
+.admin-promotion-row:hover {
+  border-color: rgba(106, 228, 182, 0.42);
+  background: rgba(255, 255, 255, 0.085);
+  transform: translateY(-1px);
+}
+
+.admin-promotion-row.expired {
+  opacity: 0.52;
+  filter: grayscale(0.9);
+}
+
+.admin-promotion-status {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 950;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .admin-product-row:hover {
@@ -1847,6 +2052,7 @@ main {
   .menu-header,
   .menu-page-hero,
   .menu-browser,
+  .promotions-grid,
   .contact-hero,
   .contact-layout,
   .admin-auth-panel,
@@ -1881,7 +2087,7 @@ main {
 
   .menu-page {
     width: min(100% - 28px, 720px);
-    padding-top: 118px;
+    padding-top: 176px;
   }
 
   .admin-page {
@@ -1891,7 +2097,12 @@ main {
 
   .contact-page {
     width: min(100% - 28px, 720px);
-    padding-top: 118px;
+    padding-top: 176px;
+  }
+
+  .promotions-page {
+    width: min(100% - 28px, 720px);
+    padding-top: 176px;
   }
 
   .category-panel {
@@ -1944,6 +2155,7 @@ main {
   .experience-section,
   .menu-section,
   .menu-page,
+  .promotions-page,
   .admin-page,
   .contact-page,
   .visit-section,
@@ -2001,16 +2213,28 @@ main {
   .experience-grid,
   .menu-grid,
   .full-menu-grid,
+  .promotions-grid,
   .category-panel {
     grid-template-columns: 1fr;
   }
 
   .menu-page-hero h1 {
-    font-size: clamp(3.1rem, 17vw, 5.1rem);
+    font-size: clamp(2.8rem, 13vw, 4.2rem);
+    line-height: 0.96;
+    overflow-wrap: anywhere;
   }
 
   .contact-hero h1 {
-    font-size: clamp(3.1rem, 17vw, 5.1rem);
+    font-size: clamp(2.8rem, 13vw, 4.2rem);
+    line-height: 0.96;
+    overflow-wrap: anywhere;
+  }
+
+  .promotions-hero h1 {
+    font-size: clamp(2.25rem, 10.5vw, 3.4rem);
+    line-height: 0.96;
+    overflow-wrap: normal;
+    word-break: keep-all;
   }
 
   .contact-hero img {
@@ -2062,7 +2286,15 @@ main {
     grid-template-columns: minmax(0, 1fr) auto auto;
   }
 
+  .admin-promotion-row {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+  }
+
   .admin-price {
+    grid-column: 1 / -1;
+  }
+
+  .admin-promotion-status {
     grid-column: 1 / -1;
   }
 
