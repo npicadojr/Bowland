@@ -19,7 +19,7 @@ export default defineConfig([
     },
   },
   {
-    files: ['api/**/*.js', 'server.mjs', 'supabase/**/*.js'],
+    files: ['supabase/**/*.js'],
     languageOptions: {
       globals: globals.node,
     },

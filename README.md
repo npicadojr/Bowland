@@ -1,6 +1,6 @@
 # Bowland Panama
 
-Sitio web React/Vite para Bowland Panama: portada, galeria, menu publico, informacion de contacto, CMS visual para editar productos y chatbot conectado a OpenAI.
+Sitio web React/Vite para Bowland Panama: portada, galeria, menu publico, informacion de contacto, CMS visual con Supabase y chatbot conectado a OpenAI mediante Cloudflare Pages Functions.
 
 ## Stack
 
@@ -10,8 +10,8 @@ Sitio web React/Vite para Bowland Panama: portada, galeria, menu publico, inform
 - CSS plano
 - lucide-react
 - Supabase Auth y Postgres para menu administrable
-- Node.js HTTP nativo para servir el build de produccion y `/api/chat`
-- Configuracion de Railway en `railway.json`
+- Cloudflare Pages para hosting del frontend
+- Cloudflare Pages Functions para `POST /api/chat`
 - OpenAI Responses API para el asistente virtual
 
 ## Requisitos
@@ -19,22 +19,21 @@ Sitio web React/Vite para Bowland Panama: portada, galeria, menu publico, inform
 - Node.js compatible con Vite 8
 - npm
 - Proyecto Supabase con Auth y Postgres
-- Proyecto Railway conectado al repositorio
-- `OPENAI_API_KEY` para activar el chatbot en produccion
+- Proyecto Cloudflare Pages conectado al repositorio
+- `OPENAI_API_KEY` configurada en Cloudflare Pages para activar el chatbot
 
 ## Configuracion
 
-El proyecto usa dos tipos de archivos/variables:
+El proyecto usa dos tipos de variables:
 
-- `.env`: variables reales para desarrollo local. No se sube al repositorio.
-- `.env.example`: plantilla/documentacion de las variables necesarias.
+- Variables locales en `.env`. No se suben al repositorio.
+- Variables de Cloudflare Pages para produccion y previews.
 
 Copia `.env.example` a `.env` y configura los valores reales:
 
 ```bash
 OPENAI_API_KEY=
 OPENAI_MODEL=gpt-4.1-mini
-PORT=5174
 VITE_SUPABASE_URL=
 VITE_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
@@ -42,20 +41,19 @@ SUPABASE_SERVICE_ROLE_KEY=
 
 Variables:
 
-- `OPENAI_API_KEY`: obligatoria para `/api/chat`. Sin esta variable, el chatbot muestra un mensaje de fallback.
+- `OPENAI_API_KEY`: obligatoria para `/api/chat`. Se usa solo en la Pages Function.
 - `OPENAI_MODEL`: opcional. Si no se define, usa `gpt-4.1-mini`.
-- `PORT`: puerto del servidor local con chat (`npm run serve:chat`).
 - `VITE_SUPABASE_URL`: URL publica del proyecto Supabase.
 - `VITE_SUPABASE_ANON_KEY`: anon key publica de Supabase. Se usa en el frontend.
 - `SUPABASE_SERVICE_ROLE_KEY`: solo para scripts locales como `npm run db:seed`. No debe exponerse en el frontend.
 
-En Railway, configura las variables en:
+En Cloudflare Pages, configura:
 
 ```text
-Service -> Variables
+Settings -> Environment variables
 ```
 
-Variables recomendadas en Railway:
+Variables recomendadas:
 
 ```text
 OPENAI_API_KEY
@@ -64,9 +62,18 @@ VITE_SUPABASE_URL
 VITE_SUPABASE_ANON_KEY
 ```
 
-Railway define `PORT` automaticamente en produccion. No configures `SUPABASE_SERVICE_ROLE_KEY` en Railway salvo que vayas a ejecutar scripts administrativos desde ese entorno.
+## Deploy en Cloudflare Pages
 
-Despues de agregar o cambiar variables en Railway, ejecuta un nuevo deploy o usa `Redeploy` desde el dashboard.
+Configuracion recomendada:
+
+```text
+Framework preset: Vite
+Build command: npm run build
+Build output directory: dist
+Functions directory: functions
+```
+
+Cloudflare Pages sirve el build estatico desde `dist/` y publica automaticamente `functions/api/chat.js` como `POST /api/chat`.
 
 ## CMS visual
 
@@ -82,113 +89,36 @@ El acceso al admin no aparece en el header publico. Se entra directamente por UR
 /#admin
 ```
 
-El CMS incluye:
-
-- Login con Supabase Auth para administradores autorizados.
-- Listado de productos agrupado por categoria.
-- Categorias colapsables: por defecto todas inician cerradas y se despliegan manualmente.
-- Edicion, creacion, visibilidad publica y eliminacion de productos.
-- Edicion y creacion de categorias.
-- Subida de imagenes de producto desde archivo o pegando una URL.
-
-### Agregar administradores
-
-1. En Supabase, ve a `Authentication -> Users`.
-2. Crea el usuario con email y password.
-3. Copia el `User UID`.
-4. Ejecuta esto en Supabase SQL Editor:
-
-```sql
-insert into menu_admins (user_id)
-values ('UUID_DEL_USUARIO')
-on conflict (user_id) do nothing;
-```
-
-Los productos con `available = true` aparecen en el menu publico. Los cambios se guardan en Supabase y el menu publico se refresca al cargar la pagina; si Realtime esta habilitado para esas tablas, tambien escucha cambios en vivo.
-
-El CMS permite subir imagenes de productos a Supabase Storage. El esquema crea el bucket publico:
-
-```text
-menu-product-images
-```
-
-Las imagenes pueden leerse publicamente, pero solo usuarios registrados en `menu_admins` pueden subir, actualizar o borrar archivos en ese bucket.
-
-Desde el formulario de producto se puede:
-
-- Subir una imagen local al bucket `menu-product-images`.
-- Pegar una URL externa en `URL de imagen`.
-- Ver una previsualizacion antes de guardar el producto.
-
-El upload desde archivo valida que sea una imagen y limita el tamano a 5 MB.
-
-Las politicas publicas de lectura:
-
-```text
-public read categories
-public read products
-```
-
-permiten ver el menu publico. No permiten editar datos.
-
-## Deploy en Railway
-
-El proyecto esta preparado para deploy automatico desde un repositorio conectado en Railway.
-
-Flujo recomendado:
-
-```bash
-npm run lint
-npm run build
-git add .
-git commit -m "Describe el cambio"
-git push
-```
-
-Railway detecta el `git push`, instala dependencias, ejecuta el build de Vite y levanta el servidor Node de produccion.
-
-La configuracion vive en `railway.json`:
-
-- Builder: Railpack
-- Build Command: `npm run build`
-- Start Command: `npm start`
-- Healthcheck: `/health`
-
-El servidor lee `process.env.PORT` y escucha en `0.0.0.0`, que es lo que Railway necesita para exponer la app publicamente.
-
 ## Scripts
 
 ```bash
-npm run dev        # Desarrollo con Vite
-npm run build      # Build de produccion en dist/
-npm run lint       # Lint del proyecto
-npm run preview    # Preview de Vite
-npm start          # Servidor Node de produccion para Railway
-npm run serve:chat # Build + servidor Node con /api/chat
+npm run dev      # Desarrollo frontend con Vite
+npm run build    # Build de produccion en dist/
+npm run lint     # Lint del proyecto
+npm run preview  # Preview local del build estatico de Vite
+npm run db:seed  # Carga inicial del menu usando service role local
 ```
 
 ## Estructura
 
 ```text
-api/chat.js          Funcion serverless heredada del deploy anterior
-railway.json         Configuracion de build, start y healthcheck en Railway
-server.mjs           Servidor de produccion con archivos estaticos, /health y /api/chat
-src/App.jsx          UI principal, vistas y widget de chat
-src/menuData.js      Categorias y productos del menu
-src/hooks/useMenu.js Carga del menu desde Supabase con fallback local
-src/lib/              Cliente Supabase del frontend
-src/components/AdminPage.jsx CMS visual para editar el menu
-src/components/Header.jsx Navegacion publica
-src/App.css          Estilos principales
-public/assets/       Assets publicos
-supabase/schema.sql  Tablas, funciones, politicas RLS y bucket de imagenes
-supabase/seed.js     Carga inicial del menu usando service role
-docs/                Documentacion tecnica
+functions/api/chat.js  Pages Function del chatbot
+lib/chatContext.js     Prompt, limites, historial y helpers compartidos
+src/App.jsx            UI principal, vistas y widget de chat
+src/menuData.js        Categorias y productos del menu
+src/hooks/useMenu.js   Carga del menu desde Supabase con fallback local
+src/lib/               Cliente Supabase del frontend
+src/components/        Vistas, header, admin y chatbot
+src/App.css            Estilos principales
+public/assets/         Assets publicos
+supabase/schema.sql    Tablas, funciones, politicas RLS y bucket de imagenes
+supabase/seed.js       Carga inicial del menu usando service role
+docs/                  Documentacion tecnica
 ```
 
 ## Chatbot
 
-El chatbot consume `POST /api/chat` con:
+El frontend consume `POST /api/chat` con:
 
 ```json
 {
@@ -197,22 +127,14 @@ El chatbot consume `POST /api/chat` con:
 }
 ```
 
-El backend arma un contexto con datos de Bowland, contacto, horario y menu completo. Las respuestas estan limitadas para no inventar precios, promociones, reservas ni disponibilidad en tiempo real.
-
-La API key de OpenAI se lee desde:
-
-```text
-process.env.OPENAI_API_KEY
-```
-
-En produccion la usa `server.mjs` dentro de Railway. En local tambien la usa `server.mjs` cuando corres `npm run serve:chat`.
+La Pages Function arma el contexto con datos de Bowland, contacto, horario y menu completo. Mantiene limites de entrada, historial reciente, prompt de sistema y limite de salida para reducir costo y evitar respuestas inventadas.
 
 ## Seguridad y mantenimiento
 
 - No subir `.env` al repositorio.
-- No poner `SUPABASE_SERVICE_ROLE_KEY` en codigo frontend.
-- No usar la service role key desde componentes React.
-- Si una key se filtra, rotarla en OpenAI o Supabase, actualizar Railway y hacer `Redeploy`.
+- No poner `OPENAI_API_KEY` ni `SUPABASE_SERVICE_ROLE_KEY` en codigo frontend.
+- Solo las variables con prefijo `VITE_` llegan al frontend.
+- Si una key se filtra, rotarla en OpenAI o Supabase, actualizar Cloudflare Pages y redeployar.
 - Para cambios de menu, usar `/#admin` con un usuario registrado en `menu_admins`.
 - Para cambios de codigo, validar con `npm run lint` y `npm run build` antes de hacer push.
 
@@ -221,12 +143,3 @@ En produccion la usa `server.mjs` dentro de Railway. En local tambien la usa `se
 El analisis tecnico completo esta en:
 
 - [`docs/ANALISIS_TECNICO.md`](docs/ANALISIS_TECNICO.md)
-
-## Verificacion
-
-Estado al 2026-05-21:
-
-- `npm run lint`: pasa.
-- `npm run build`: pasa.
-
-Actualmente no hay pruebas unitarias ni end-to-end configuradas.
