@@ -1,21 +1,23 @@
 # Analisis tecnico del sistema Bowland
 
-Fecha de revision: 2026-05-20
+Fecha de revision: 2026-05-21
 
 ## Resumen ejecutivo
 
-Bowland es una aplicacion web de una sola pagina para promocionar el venue Bowland Panama, mostrar el menu completo, exponer canales de contacto y ofrecer un chatbot conectado a OpenAI. El frontend esta construido con React sobre Vite. El backend es minimo y existe en dos variantes: una funcion serverless para despliegue tipo Vercel y un servidor HTTP local para servir la version compilada con el mismo endpoint de chat.
+Bowland es una aplicacion web de una sola pagina para promocionar el venue Bowland Panama, mostrar el menu completo, exponer canales de contacto, administrar productos desde Supabase y ofrecer un chatbot conectado a OpenAI. El frontend esta construido con React sobre Vite. El backend de produccion es un servidor HTTP Node para Railway que sirve la version compilada, expone `/health` y atiende `/api/chat`.
 
-La base es simple, funcional y de bajo acoplamiento. El mayor riesgo tecnico no esta en la complejidad del codigo, sino en la duplicacion de logica del chatbot, la ausencia de pruebas automatizadas y la dependencia de datos e imagenes externas sin una estrategia de actualizacion o fallback.
+La base es simple, funcional y de bajo acoplamiento. El mayor riesgo tecnico no esta en la complejidad del codigo, sino en la ausencia de pruebas automatizadas y la dependencia de configuracion externa correcta para Supabase, OpenAI y Railway.
 
 ## Estructura del proyecto
 
 ```text
 .
 ├── api/
-│   └── chat.js              # Funcion serverless del chatbot
+│   └── chat.js              # Funcion serverless heredada del deploy anterior
 ├── docs/
 │   └── ANALISIS_TECNICO.md  # Este documento
+├── lib/
+│   └── chatContext.js       # Prompt, limites y helpers compartidos del chatbot
 ├── public/
 │   ├── assets/
 │   │   └── bowland-logo.png # Logo publico
@@ -24,10 +26,14 @@ La base es simple, funcional y de bajo acoplamiento. El mayor riesgo tecnico no 
 ├── src/
 │   ├── App.jsx              # Aplicacion React, vistas y chatbot
 │   ├── App.css              # Estilos principales
+│   ├── components/          # Vistas principales, header, admin y chatbot
+│   ├── hooks/               # Hooks de menu y promociones
 │   ├── index.css            # Estilos base
+│   ├── lib/                 # Cliente Supabase del frontend
 │   ├── main.jsx             # Entrada de React
 │   └── menuData.js          # Datos completos del menu
-├── server.mjs               # Servidor local de produccion con endpoint de chat
+├── railway.json             # Build, start y healthcheck para Railway
+├── server.mjs               # Servidor de produccion con estaticos, /health y /api/chat
 ├── package.json             # Scripts y dependencias
 ├── vite.config.js           # Configuracion Vite
 └── eslint.config.js         # Configuracion ESLint
@@ -41,21 +47,17 @@ La aplicacion React funciona como SPA con navegacion por hash:
 
 - `#inicio`: portada, carrusel de fotos y seccion de experiencia.
 - `#menu`: buscador y filtro por categorias del menu.
+- `#promociones`: promociones publicas.
 - `#contacto`: mapa, telefono, email, Instagram, horario y planes.
+- `#admin`: CMS visual protegido por Supabase Auth.
 
 El estado de navegacion vive en `App.jsx` y se sincroniza con `window.location.hash`. No se usa React Router, lo cual es razonable para el tamano actual del proyecto.
 
 ### Menu
 
-Los datos viven en `src/menuData.js` como arrays exportados:
+El menu publico se carga desde Supabase cuando `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` estan configuradas. Si Supabase no esta disponible, usa el fallback local de `src/menuData.js`.
 
-- `menuCategories`: 15 categorias.
-- `menuProducts`: 139 productos.
-- Todos los productos tienen imagen.
-- 3 productos tienen precio no confirmado o no valido.
-- No se detectaron productos marcados como agotados.
-
-El menu se filtra en cliente por categoria y busqueda textual. La normalizacion elimina acentos para mejorar la busqueda.
+El menu se filtra en cliente por categoria y busqueda textual. La normalizacion elimina acentos para mejorar la busqueda. El CMS permite editar categorias, productos, disponibilidad, visibilidad e imagenes.
 
 ### Chatbot
 
@@ -71,10 +73,10 @@ El widget de chat esta embebido en `App.jsx` y consume `POST /api/chat`. El endp
 
 Hay dos implementaciones casi iguales:
 
-- `api/chat.js`: para funciones serverless.
-- `server.mjs`: para ejecutar localmente una build de produccion.
+- `server.mjs`: endpoint activo en Railway y en la ejecucion local de produccion.
+- `api/chat.js`: funcion serverless heredada del despliegue anterior.
 
-Esta duplicacion es util para despliegue flexible, pero conviene extraer la logica compartida a un modulo comun para reducir inconsistencias.
+La logica comun de prompt, limites, normalizacion de historial y extraccion de respuesta vive en `lib/chatContext.js`.
 
 ## Variables de entorno
 
@@ -84,13 +86,19 @@ El archivo `.env.example` define:
 OPENAI_API_KEY=
 OPENAI_MODEL=gpt-4.1-mini
 PORT=5174
+VITE_SUPABASE_URL=
+VITE_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
 ```
 
 Uso:
 
 - `OPENAI_API_KEY`: obligatoria para activar el chatbot.
 - `OPENAI_MODEL`: opcional; define el modelo usado por la Responses API.
-- `PORT`: usado por `server.mjs` al ejecutar `npm run serve:chat`.
+- `PORT`: usado por `server.mjs`; Railway lo define automaticamente en produccion.
+- `VITE_SUPABASE_URL`: URL publica del proyecto Supabase.
+- `VITE_SUPABASE_ANON_KEY`: anon key publica de Supabase.
+- `SUPABASE_SERVICE_ROLE_KEY`: solo para scripts administrativos como `npm run db:seed`.
 
 ## Scripts disponibles
 
@@ -99,8 +107,20 @@ npm run dev        # Servidor Vite de desarrollo
 npm run build      # Build de produccion en dist/
 npm run lint       # Revision ESLint
 npm run preview    # Preview de Vite sobre dist/
+npm start          # Servidor Node de produccion para Railway
 npm run serve:chat # Build y servidor Node con /api/chat
 ```
+
+## Despliegue en Railway
+
+El despliegue esta definido en `railway.json`:
+
+- Builder: Railpack.
+- Build Command: `npm run build`.
+- Start Command: `npm start`.
+- Healthcheck: `/health`.
+
+`server.mjs` lee `process.env.PORT` y escucha en `0.0.0.0` por defecto para que Railway pueda exponer el servicio publicamente.
 
 ## Estado de verificacion
 
@@ -121,51 +141,33 @@ No hay pruebas unitarias, de integracion ni end-to-end configuradas.
 
 ## Riesgos tecnicos y observaciones
 
-1. Duplicacion de backend del chatbot
+1. Documentacion operativa
 
-   `api/chat.js` y `server.mjs` repiten prompt, formateo de precios, normalizacion de historial, llamada a OpenAI y extraccion de respuesta. Cualquier cambio futuro podria quedar aplicado en un archivo y no en el otro.
+   El README ya cubre Railway, variables, CMS y chatbot, pero debe mantenerse sincronizado con cambios de infraestructura.
 
-2. Documentacion previa insuficiente
+2. Dependencia de Supabase
 
-   El README original era la plantilla de Vite y no explicaba Bowland, el chatbot, variables de entorno ni despliegue.
+   El menu y CMS dependen de que Auth, Postgres, RLS y Storage esten configurados con el esquema del repositorio.
 
-3. Datos del menu hardcodeados
+3. Dependencia de imagenes externas
 
-   El menu esta versionado en codigo. Esto facilita un sitio rapido y estable, pero requiere despliegue para actualizar precios, disponibilidad o productos.
+   Si hay productos con URLs externas, esos recursos pueden romperse si el proveedor cambia rutas, bloquea hotlinking o cae.
 
-4. Dependencia de imagenes externas
-
-   Gran parte del contenido visual viene de URLs remotas. Si el proveedor cambia rutas, bloquea hotlinking o cae, la UI pierde contenido visual.
-
-5. Sin pruebas de regresion
+4. Sin pruebas de regresion
 
    Playwright esta instalado, pero no existen specs. El flujo de menu, navegacion y chatbot deberia tener al menos pruebas basicas.
 
-6. Manejo limitado de errores del chatbot
+5. Manejo limitado de errores del chatbot
 
    El frontend muestra un mensaje generico cuando falla `/api/chat`. No distingue falta de configuracion, rate limit, error de red o error del proveedor.
 
-7. CSS con estilos no usados
-
-   Existen clases como `menu-section`, `visit-section`, `category-rail`, `menu-card` y `hero-media` que no parecen renderizarse desde `App.jsx`. Pueden ser restos de iteraciones previas.
-
-8. Accesibilidad mejorable
+6. Accesibilidad mejorable
 
    La UI tiene varios `aria-label`, botones reales y textos alternativos principales. Aun asi, conviene revisar foco visible, contraste en estados secundarios y textos alternativos de productos si el menu requiere comunicacion visual accesible.
 
 ## Recomendaciones prioritarias
 
-1. Extraer logica compartida del chat
-
-   Crear un modulo, por ejemplo `src/chatContext.js` o `lib/chat.js`, que centralice:
-
-   - Construccion de `MENU_CONTEXT`.
-   - `SITE_CONTEXT` y `CHATBOT_PROMPT`.
-   - Normalizacion del historial.
-   - Extraccion de respuesta.
-   - Constantes de limites.
-
-2. Agregar pruebas Playwright minimas
+1. Agregar pruebas Playwright minimas
 
    Cubrir:
 
@@ -174,16 +176,17 @@ No hay pruebas unitarias, de integracion ni end-to-end configuradas.
    - Render de tarjetas del menu.
    - Apertura/cierre del chatbot.
    - Estado de error del chatbot sin `OPENAI_API_KEY`.
+   - Healthcheck `/health`.
 
-3. Definir fuente de verdad para el menu
+2. Fortalecer operacion de Supabase
 
-   Si el menu cambia seguido, mover datos a CMS, JSON remoto versionado, base de datos o una integracion con la fuente del menu digital.
+   Documentar el alta de administradores, politicas RLS, bucket de imagenes y proceso de seed por ambiente.
 
-4. Mejorar documentacion operacional
+3. Mejorar observabilidad
 
-   Documentar despliegue, variables por ambiente, actualizacion del menu, verificacion visual y procedimiento para rotar `OPENAI_API_KEY`.
+   Agregar logs estructurados para errores de `/api/chat`, fallos de Supabase y healthchecks de produccion.
 
-5. Limpiar CSS y assets no usados
+4. Limpiar CSS y assets no usados
 
    Remover estilos y assets heredados si no forman parte del producto actual. Esto reduce ruido y hace mas segura la evolucion del frontend.
 
@@ -192,13 +195,12 @@ No hay pruebas unitarias, de integracion ni end-to-end configuradas.
 ### Corto plazo
 
 - Mantener README actualizado.
-- Extraer modulo compartido del chatbot.
 - Agregar pruebas Playwright smoke.
-- Validar que las 3 entradas sin precio esten intencionalmente sin monto.
+- Validar el primer deploy en Railway con variables reales.
+- Probar login de `/#admin` contra Supabase de produccion.
 
 ### Mediano plazo
 
-- Separar componentes React por dominio: `Header`, `MenuPage`, `ContactPage`, `ChatbotWidget`.
 - Crear un esquema de datos para menu y validar duplicados, precios nulos e imagenes faltantes.
 - Agregar monitoreo basico de errores de API.
 

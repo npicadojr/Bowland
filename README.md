@@ -10,8 +10,8 @@ Sitio web React/Vite para Bowland Panama: portada, galeria, menu publico, inform
 - CSS plano
 - lucide-react
 - Supabase Auth y Postgres para menu administrable
-- Node.js HTTP nativo para servir build local con chat
-- Funcion serverless en `api/chat.js`
+- Node.js HTTP nativo para servir el build de produccion y `/api/chat`
+- Configuracion de Railway en `railway.json`
 - OpenAI Responses API para el asistente virtual
 
 ## Requisitos
@@ -19,7 +19,7 @@ Sitio web React/Vite para Bowland Panama: portada, galeria, menu publico, inform
 - Node.js compatible con Vite 8
 - npm
 - Proyecto Supabase con Auth y Postgres
-- Proyecto Vercel conectado al repositorio
+- Proyecto Railway conectado al repositorio
 - `OPENAI_API_KEY` para activar el chatbot en produccion
 
 ## Configuracion
@@ -49,13 +49,13 @@ Variables:
 - `VITE_SUPABASE_ANON_KEY`: anon key publica de Supabase. Se usa en el frontend.
 - `SUPABASE_SERVICE_ROLE_KEY`: solo para scripts locales como `npm run db:seed`. No debe exponerse en el frontend.
 
-En Vercel, configura las variables en:
+En Railway, configura las variables en:
 
 ```text
-Project Settings -> Environment Variables
+Service -> Variables
 ```
 
-Variables recomendadas en Vercel:
+Variables recomendadas en Railway:
 
 ```text
 OPENAI_API_KEY
@@ -64,7 +64,9 @@ VITE_SUPABASE_URL
 VITE_SUPABASE_ANON_KEY
 ```
 
-Despues de agregar o cambiar variables en Vercel, ejecuta un nuevo deploy o usa `Redeploy` desde el dashboard.
+Railway define `PORT` automaticamente en produccion. No configures `SUPABASE_SERVICE_ROLE_KEY` en Railway salvo que vayas a ejecutar scripts administrativos desde ese entorno.
+
+Despues de agregar o cambiar variables en Railway, ejecuta un nuevo deploy o usa `Redeploy` desde el dashboard.
 
 ## CMS visual
 
@@ -129,9 +131,9 @@ public read products
 
 permiten ver el menu publico. No permiten editar datos.
 
-## Deploy en Vercel
+## Deploy en Railway
 
-El proyecto esta pensado para deploy automatico desde el repositorio conectado en Vercel.
+El proyecto esta preparado para deploy automatico desde un repositorio conectado en Railway.
 
 Flujo recomendado:
 
@@ -143,13 +145,16 @@ git commit -m "Describe el cambio"
 git push
 ```
 
-Vercel detecta el `git push`, instala dependencias, ejecuta el build de Vite y publica la nueva version.
+Railway detecta el `git push`, instala dependencias, ejecuta el build de Vite y levanta el servidor Node de produccion.
 
-Configuracion esperada en Vercel:
+La configuracion vive en `railway.json`:
 
-- Framework: Vite
+- Builder: Railpack
 - Build Command: `npm run build`
-- Output Directory: `dist`
+- Start Command: `npm start`
+- Healthcheck: `/health`
+
+El servidor lee `process.env.PORT` y escucha en `0.0.0.0`, que es lo que Railway necesita para exponer la app publicamente.
 
 ## Scripts
 
@@ -158,14 +163,16 @@ npm run dev        # Desarrollo con Vite
 npm run build      # Build de produccion en dist/
 npm run lint       # Lint del proyecto
 npm run preview    # Preview de Vite
+npm start          # Servidor Node de produccion para Railway
 npm run serve:chat # Build + servidor Node con /api/chat
 ```
 
 ## Estructura
 
 ```text
-api/chat.js          Funcion serverless del chatbot
-server.mjs           Servidor local de produccion con endpoint de chat
+api/chat.js          Funcion serverless heredada del deploy anterior
+railway.json         Configuracion de build, start y healthcheck en Railway
+server.mjs           Servidor de produccion con archivos estaticos, /health y /api/chat
 src/App.jsx          UI principal, vistas y widget de chat
 src/menuData.js      Categorias y productos del menu
 src/hooks/useMenu.js Carga del menu desde Supabase con fallback local
@@ -198,14 +205,14 @@ La API key de OpenAI se lee desde:
 process.env.OPENAI_API_KEY
 ```
 
-En produccion la usa `api/chat.js` dentro de Vercel. En local la usa `server.mjs` cuando corres `npm run serve:chat`.
+En produccion la usa `server.mjs` dentro de Railway. En local tambien la usa `server.mjs` cuando corres `npm run serve:chat`.
 
 ## Seguridad y mantenimiento
 
 - No subir `.env` al repositorio.
 - No poner `SUPABASE_SERVICE_ROLE_KEY` en codigo frontend.
 - No usar la service role key desde componentes React.
-- Si una key se filtra, rotarla en OpenAI o Supabase, actualizar Vercel y hacer `Redeploy`.
+- Si una key se filtra, rotarla en OpenAI o Supabase, actualizar Railway y hacer `Redeploy`.
 - Para cambios de menu, usar `/#admin` con un usuario registrado en `menu_admins`.
 - Para cambios de codigo, validar con `npm run lint` y `npm run build` antes de hacer push.
 

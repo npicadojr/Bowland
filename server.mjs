@@ -9,6 +9,7 @@ import {
 } from './lib/chatContext.js'
 
 const PORT = Number(process.env.PORT || 5174)
+const HOST = process.env.HOST || '0.0.0.0'
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY
 const MAX_REQUEST_CHARS = 8000
 const MAX_OUTPUT_TOKENS = 90
@@ -113,12 +114,19 @@ const serveStatic = async (request, response) => {
 }
 
 createServer(async (request, response) => {
-  if (request.method === 'POST' && request.url === '/api/chat') {
+  const url = new URL(request.url, `http://${request.headers.host}`)
+
+  if (request.method === 'GET' && url.pathname === '/health') {
+    sendJson(response, 200, { status: 'ok' })
+    return
+  }
+
+  if (request.method === 'POST' && url.pathname === '/api/chat') {
     await handleChat(request, response)
     return
   }
 
   await serveStatic(request, response)
-}).listen(PORT, () => {
-  console.log(`Bowland site with chat running on http://127.0.0.1:${PORT}`)
+}).listen(PORT, HOST, () => {
+  console.log(`Bowland site with chat running on http://${HOST}:${PORT}`)
 })

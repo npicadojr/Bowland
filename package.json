@@ -9,7 +9,11 @@
     "db:seed": "node --env-file=.env supabase/seed.js",
     "lint": "eslint .",
     "preview": "vite preview",
+    "start": "node server.mjs",
     "serve:chat": "npm run build && node server.mjs"
+  },
+  "engines": {
+    "node": ">=22"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.106.1",

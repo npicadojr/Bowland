@@ -56,7 +56,7 @@ function ChatbotWidget() {
         {
           role: 'assistant',
           content:
-            'Aun no estoy conectado al servidor de IA. Para activarme en Vercel, configura OPENAI_API_KEY en las variables de entorno y vuelve a desplegar.',
+            'Aun no estoy conectado al servidor de IA. Para activarme, configura OPENAI_API_KEY en las variables de entorno de Railway y vuelve a desplegar.',
         },
       ])
     } finally {
