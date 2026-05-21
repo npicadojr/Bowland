@@ -14,14 +14,21 @@ const jsonResponse = (payload, status = 200) =>
     status,
     headers: {
       'Content-Type': 'application/json; charset=utf-8',
+      'Cache-Control': 'no-store',
     },
   })
 
 const readJsonBody = async (request) => {
+  const contentType = request.headers.get('content-type') || ''
+
+  if (!contentType.includes('application/json')) {
+    throw new TypeError('Expected application/json request body.')
+  }
+
   const body = await request.text()
 
   if (body.length > MAX_REQUEST_CHARS) {
-    throw new Error('Request body is too large.')
+    throw new RangeError('Request body is too large.')
   }
 
   return JSON.parse(body || '{}')
@@ -75,9 +82,21 @@ export async function onRequestPost({ request, env }) {
     }
 
     return jsonResponse({ reply: extractResponse(data) })
-  } catch {
+  } catch (error) {
+    if (error instanceof SyntaxError || error instanceof TypeError) {
+      return jsonResponse({ error: 'Invalid JSON request body.' }, 400)
+    }
+
+    if (error instanceof RangeError) {
+      return jsonResponse({ error: 'Request body is too large.' }, 413)
+    }
+
     return jsonResponse({ error: 'Chat request failed.' }, 500)
   }
+}
+
+export function onRequestGet() {
+  return jsonResponse({ error: 'Method not allowed.' }, 405)
 }
 
 export function onRequestOptions() {

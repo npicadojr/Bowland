@@ -8,10 +8,8 @@
     "build": "vite build",
     "db:seed": "node --env-file=.env supabase/seed.js",
     "lint": "eslint .",
-    "preview": "npm run build && wrangler dev",
-    "start": "node server.mjs",
-    "serve:chat": "npm run build && node server.mjs",
-    "deploy": "npm run build && wrangler deploy"
+    "preview": "npm run build && wrangler pages dev dist",
+    "deploy": "npm run build && wrangler pages deploy dist"
   },
   "engines": {
     "node": ">=22"
@@ -23,7 +21,6 @@
     "react-dom": "^19.2.6"
   },
   "devDependencies": {
-    "@cloudflare/vite-plugin": "^1.37.3",
     "@eslint/js": "^10.0.1",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
@@ -33,6 +30,7 @@
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.6.0",
     "playwright": "^1.60.0",
+    "undici": "^7.24.8",
     "vite": "^8.0.13",
     "wrangler": "^4.93.1"
   }

@@ -4,7 +4,7 @@ Fecha de revision: 2026-05-21
 
 ## Resumen ejecutivo
 
-Bowland es una aplicacion web de una sola pagina para promocionar el venue Bowland Panama, mostrar el menu completo, exponer canales de contacto, administrar productos desde Supabase y ofrecer un chatbot conectado a OpenAI. El frontend esta construido con React sobre Vite. El backend Node/Railway fue reemplazado por Cloudflare Pages Functions.
+Bowland es una aplicacion web de una sola pagina para promocionar el venue Bowland Panama, mostrar el menu completo, exponer canales de contacto, administrar productos desde Supabase y ofrecer un chatbot conectado a OpenAI. El frontend esta construido con React sobre Vite y el endpoint del chatbot corre en Cloudflare Pages Functions.
 
 ## Estructura del proyecto
 
