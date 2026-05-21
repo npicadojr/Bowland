@@ -68,12 +68,12 @@ export function useMenu() {
         const { supabase } = await import('../lib/supabaseClient')
 
         const [categoriesResult, productsResult] = await Promise.all([
-          supabase.from('menu_categories').select('*').order('display_order'),
+          supabase.from('menu_categories').select('*').order('name'),
           supabase
             .from('menu_products')
             .select('*')
             .eq('available', true)
-            .order('display_order'),
+            .order('name'),
         ])
 
         if (categoriesResult.error || productsResult.error) {

@@ -100,6 +100,10 @@ img {
   transform: translateX(-50%);
 }
 
+.admin-site-header {
+  background: rgba(6, 5, 10, 0.78);
+}
+
 .brand-link {
   display: inline-flex;
   padding: 0;
@@ -910,9 +914,9 @@ main {
 }
 
 .admin-page {
-  width: min(1180px, calc(100% - 40px));
+  width: min(1120px, calc(100% - 40px));
   margin: 0 auto;
-  padding: 142px 0 92px;
+  padding: 150px 0 92px;
 }
 
 .admin-auth-panel,
@@ -923,25 +927,27 @@ main {
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background:
-    linear-gradient(135deg, rgba(236, 0, 255, 0.13), rgba(106, 228, 182, 0.06)),
-    rgba(14, 9, 20, 0.92);
+    linear-gradient(135deg, rgba(236, 0, 255, 0.09), rgba(106, 228, 182, 0.08)),
+    rgba(12, 8, 17, 0.94);
+  box-shadow: 0 18px 56px rgba(0, 0, 0, 0.28);
 }
 
 .admin-auth-panel {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(320px, 420px);
-  gap: 24px;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 400px);
+  gap: 34px;
   align-items: start;
-  padding: 28px;
+  padding: 34px 28px 28px;
+  min-height: 300px;
 }
 
 .admin-auth-panel h1,
 .admin-hero h1 {
   margin: 0;
   color: var(--white);
-  font-size: clamp(3rem, 7vw, 6.6rem);
+  font-size: clamp(2.8rem, 5.8vw, 5.6rem);
   font-weight: 950;
-  line-height: 0.92;
+  line-height: 0.95;
   text-transform: uppercase;
 }
 
@@ -953,11 +959,12 @@ main {
 }
 
 .admin-hero {
+  position: static;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 20px;
   align-items: end;
-  padding: 28px;
+  padding: 22px;
   margin-bottom: 18px;
 }
 
@@ -969,7 +976,7 @@ main {
 
 .admin-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 390px;
+  grid-template-columns: minmax(0, 1fr) minmax(360px, 430px);
   gap: 18px;
   align-items: start;
 }
@@ -977,7 +984,7 @@ main {
 .admin-list-panel,
 .admin-form,
 .admin-categories-list {
-  padding: 18px;
+  padding: 20px;
 }
 
 .admin-panel-heading,
@@ -1019,7 +1026,63 @@ main {
 .admin-products-list {
   max-height: 840px;
   overflow: auto;
-  padding-right: 4px;
+  padding-right: 6px;
+  scrollbar-color: rgba(106, 228, 182, 0.5) rgba(255, 255, 255, 0.07);
+}
+
+.admin-product-group {
+  display: grid;
+  gap: 10px;
+}
+
+.admin-product-group + .admin-product-group {
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+
+.admin-product-group-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 34px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+
+.admin-product-group-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  color: var(--mint);
+}
+
+.admin-product-group-title svg {
+  flex: 0 0 auto;
+}
+
+.admin-product-group-title h3 {
+  margin: 0;
+  color: var(--mint);
+  font-size: 0.84rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.admin-product-group-count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 30px;
+  min-height: 26px;
+  border-radius: var(--radius);
+  color: var(--white);
+  background: rgba(255, 255, 255, 0.09);
+  font-weight: 950;
 }
 
 .admin-product-row {
@@ -1031,7 +1094,17 @@ main {
   padding: 10px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.055);
+  transition:
+    border-color 180ms ease,
+    background 180ms ease,
+    transform 180ms ease;
+}
+
+.admin-product-row:hover {
+  border-color: rgba(106, 228, 182, 0.42);
+  background: rgba(255, 255, 255, 0.085);
+  transform: translateY(-1px);
 }
 
 .admin-product-main {
@@ -1090,7 +1163,7 @@ main {
 
 .admin-form label {
   display: grid;
-  gap: 7px;
+  gap: 8px;
   color: var(--muted);
   font-size: 0.78rem;
   font-weight: 950;
@@ -1101,26 +1174,114 @@ main {
 .admin-form textarea,
 .admin-form select {
   width: 100%;
-  min-height: 44px;
+  min-height: 46px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   outline: 0;
-  padding: 0 12px;
+  padding: 0 14px;
   color: var(--white);
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.075);
   font: inherit;
   font-size: 0.95rem;
   font-weight: 750;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    background 180ms ease;
+}
+
+.admin-form input:focus,
+.admin-form textarea:focus,
+.admin-form select:focus {
+  border-color: rgba(106, 228, 182, 0.72);
+  background: rgba(255, 255, 255, 0.105);
+  box-shadow: 0 0 0 3px rgba(106, 228, 182, 0.14);
 }
 
 .admin-form textarea {
-  min-height: 104px;
-  padding-top: 10px;
+  min-height: 118px;
+  padding-top: 12px;
   resize: vertical;
 }
 
 .admin-form select option {
   color: #111;
+}
+
+.admin-image-field {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  align-items: start;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.admin-image-preview {
+  width: 100%;
+  height: 104px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  object-fit: cover;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04)),
+    rgba(255, 255, 255, 0.08);
+}
+
+.admin-image-controls {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.admin-form .admin-image-control {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 950;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+.admin-form .admin-image-control span {
+  display: block;
+}
+
+.admin-form .admin-image-control input {
+  min-width: 0;
+}
+
+.admin-image-hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 850;
+  line-height: 1.45;
+}
+
+.admin-form input[type="file"] {
+  min-height: 46px;
+  overflow: hidden;
+  padding: 7px;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.admin-form input[type="file"]::file-selector-button {
+  min-height: 30px;
+  margin-right: 10px;
+  border: 0;
+  border-radius: 6px;
+  color: #17061f;
+  background: var(--white);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 950;
 }
 
 .admin-form-grid {
@@ -1133,6 +1294,7 @@ main {
   grid-template-columns: auto 1fr;
   align-items: center;
   text-transform: none;
+  min-height: 34px;
 }
 
 .admin-check input {
@@ -1154,12 +1316,18 @@ main {
   font-size: 0.86rem;
   font-weight: 950;
   text-transform: uppercase;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease,
+    opacity 180ms ease;
 }
 
 .admin-primary-button {
   border: 1px solid rgba(106, 228, 182, 0.7);
   color: #25002a;
   background: linear-gradient(135deg, var(--mint), #d6ff62);
+  box-shadow: 0 12px 30px rgba(106, 228, 182, 0.2);
 }
 
 .admin-secondary-button,
@@ -1167,6 +1335,18 @@ main {
   border: 1px solid var(--line);
   color: var(--white);
   background: rgba(255, 255, 255, 0.08);
+}
+
+.admin-primary-button:hover,
+.admin-secondary-button:hover,
+.admin-icon-button:hover {
+  transform: translateY(-1px);
+}
+
+.admin-secondary-button:hover,
+.admin-icon-button:hover {
+  border-color: rgba(106, 228, 182, 0.42);
+  background: rgba(255, 255, 255, 0.11);
 }
 
 .admin-icon-button {
@@ -1645,6 +1825,11 @@ main {
     justify-items: center;
   }
 
+  .admin-site-header {
+    width: calc(100% - 24px);
+    min-height: auto;
+  }
+
   .site-header nav {
     display: flex;
     width: 100%;
@@ -1701,7 +1886,7 @@ main {
 
   .admin-page {
     width: min(100% - 28px, 720px);
-    padding-top: 118px;
+    padding-top: 150px;
   }
 
   .contact-page {
@@ -1859,6 +2044,20 @@ main {
     padding: 16px;
   }
 
+  .admin-auth-panel {
+    min-height: auto;
+  }
+
+  .admin-auth-panel h1,
+  .admin-hero h1 {
+    font-size: clamp(2.25rem, 12vw, 3.8rem);
+    line-height: 0.98;
+  }
+
+  .admin-page {
+    padding-top: 172px;
+  }
+
   .admin-product-row {
     grid-template-columns: minmax(0, 1fr) auto auto;
   }
@@ -1869,6 +2068,11 @@ main {
 
   .admin-form-grid {
     grid-template-columns: 1fr;
+  }
+
+  .admin-image-preview {
+    height: 96px;
+    aspect-ratio: 16 / 9;
   }
 
   .footer-bar,

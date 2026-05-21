@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
+  ChevronDown,
+  ChevronRight,
   Eye,
   EyeOff,
   LogOut,
@@ -7,7 +9,10 @@ import {
   RefreshCw,
   Save,
   Trash2,
+  Upload,
 } from 'lucide-react'
+
+const PRODUCT_IMAGE_BUCKET = 'menu-product-images'
 
 const hasSupabaseConfig =
   Boolean(import.meta.env.VITE_SUPABASE_URL) &&
@@ -21,14 +26,12 @@ const emptyProduct = {
   description: '',
   image_url: '',
   available: true,
-  display_order: 0,
 }
 
 const emptyCategory = {
   id: null,
   name: '',
   slug: '',
-  display_order: 0,
 }
 
 const slugify = (value) =>
@@ -102,7 +105,16 @@ function LoginPanel({ onLogin }) {
   )
 }
 
-function ProductForm({ categories, form, saving, onChange, onSubmit, onNew }) {
+function ProductForm({
+  categories,
+  form,
+  saving,
+  uploading,
+  onChange,
+  onImageUpload,
+  onSubmit,
+  onNew,
+}) {
   return (
     <form className="admin-form" onSubmit={onSubmit}>
       <div className="admin-form-head">
@@ -134,27 +146,16 @@ function ProductForm({ categories, form, saving, onChange, onSubmit, onNew }) {
           ))}
         </select>
       </label>
-      <div className="admin-form-grid">
-        <label>
-          Precio
-          <input
-            min="0"
-            step="0.01"
-            type="number"
-            value={form.price}
-            onChange={(event) => onChange({ price: event.target.value })}
-          />
-        </label>
-        <label>
-          Orden
-          <input
-            step="1"
-            type="number"
-            value={form.display_order}
-            onChange={(event) => onChange({ display_order: event.target.value })}
-          />
-        </label>
-      </div>
+      <label>
+        Precio
+        <input
+          min="0"
+          step="0.01"
+          type="number"
+          value={form.price}
+          onChange={(event) => onChange({ price: event.target.value })}
+        />
+      </label>
       <label>
         Descripción
         <textarea
@@ -163,13 +164,29 @@ function ProductForm({ categories, form, saving, onChange, onSubmit, onNew }) {
           onChange={(event) => onChange({ description: event.target.value })}
         />
       </label>
-      <label>
-        URL de imagen
-        <input
-          value={form.image_url || ''}
-          onChange={(event) => onChange({ image_url: event.target.value })}
-        />
-      </label>
+      <div className="admin-image-field">
+        {form.image_url ? (
+          <img className="admin-image-preview" src={form.image_url} alt="" />
+        ) : (
+          <div className="admin-image-preview" aria-hidden="true" />
+        )}
+        <div className="admin-image-controls">
+          <label className="admin-image-control">
+            <span>Imagen del producto</span>
+            <input accept="image/*" type="file" onChange={onImageUpload} />
+          </label>
+          <label className="admin-image-control">
+            <span>URL de imagen</span>
+            <input
+              value={form.image_url || ''}
+              onChange={(event) => onChange({ image_url: event.target.value })}
+            />
+          </label>
+          <p className="admin-image-hint">
+            {uploading ? 'Subiendo imagen...' : 'Puedes subir una imagen o pegar una URL.'}
+          </p>
+        </div>
+      </div>
       <label className="admin-check">
         <input
           checked={form.available}
@@ -178,8 +195,8 @@ function ProductForm({ categories, form, saving, onChange, onSubmit, onNew }) {
         />
         Visible en el menú público
       </label>
-      <button className="admin-primary-button" disabled={saving} type="submit">
-        <Save size={18} aria-hidden="true" />
+      <button className="admin-primary-button" disabled={saving || uploading} type="submit">
+        {uploading ? <Upload size={18} aria-hidden="true" /> : <Save size={18} aria-hidden="true" />}
         {saving ? 'Guardando...' : 'Guardar producto'}
       </button>
     </form>
@@ -216,20 +233,48 @@ function CategoryForm({ form, saving, onChange, onSubmit, onNew }) {
           onChange={(event) => onChange({ slug: slugify(event.target.value) })}
         />
       </label>
-      <label>
-        Orden
-        <input
-          step="1"
-          type="number"
-          value={form.display_order}
-          onChange={(event) => onChange({ display_order: event.target.value })}
-        />
-      </label>
       <button className="admin-primary-button" disabled={saving} type="submit">
         <Save size={18} aria-hidden="true" />
         {saving ? 'Guardando...' : 'Guardar categoría'}
       </button>
     </form>
+  )
+}
+
+function ProductRow({ product, categoryName, onEdit, onToggle, onDelete }) {
+  return (
+    <article className="admin-product-row">
+      <button
+        className="admin-product-main"
+        type="button"
+        onClick={() => onEdit(product)}
+      >
+        <img src={product.image_url || '/favicon.svg'} alt="" />
+        <span>
+          <strong>{product.name}</strong>
+          <small>{categoryName}</small>
+        </span>
+      </button>
+      <strong className="admin-price">
+        {product.price === null ? '-' : `$${Number(product.price).toFixed(2)}`}
+      </strong>
+      <button
+        className="admin-icon-button"
+        type="button"
+        onClick={() => onToggle(product)}
+        aria-label={product.available ? 'Ocultar producto' : 'Mostrar producto'}
+      >
+        {product.available ? <Eye size={18} /> : <EyeOff size={18} />}
+      </button>
+      <button
+        className="admin-icon-button danger"
+        type="button"
+        onClick={() => onDelete(product.id)}
+        aria-label="Eliminar producto"
+      >
+        <Trash2 size={18} aria-hidden="true" />
+      </button>
+    </article>
   )
 }
 
@@ -240,19 +285,60 @@ function AdminPage() {
   const [products, setProducts] = useState([])
   const [productForm, setProductForm] = useState(emptyProduct)
   const [categoryForm, setCategoryForm] = useState(emptyCategory)
-  const [status, setStatus] = useState({ loading: false, saving: false, message: '', error: '' })
+  const [expandedCategoryIds, setExpandedCategoryIds] = useState(() => new Set())
+  const [status, setStatus] = useState({
+    loading: false,
+    saving: false,
+    uploading: false,
+    message: '',
+    error: '',
+  })
 
   const categoryById = useMemo(
     () => new Map(categories.map((category) => [category.id, category.name])),
     [categories],
   )
 
+  const groupedProducts = useMemo(() => {
+    const productsByCategory = new Map()
+    products.forEach((product) => {
+      const key = product.category_id || 'uncategorized'
+      const current = productsByCategory.get(key) || []
+      productsByCategory.set(key, [...current, product])
+    })
+
+    const groups = categories.map((category) => ({
+      id: category.id,
+      name: category.name,
+      products: productsByCategory.get(category.id) || [],
+    }))
+
+    const uncategorized = productsByCategory.get('uncategorized') || []
+    if (uncategorized.length) {
+      groups.push({ id: 'uncategorized', name: 'Sin categoría', products: uncategorized })
+    }
+
+    return groups.filter((group) => group.products.length > 0)
+  }, [categories, products])
+
+  const toggleCategoryGroup = (groupId) => {
+    setExpandedCategoryIds((current) => {
+      const next = new Set(current)
+      if (next.has(groupId)) {
+        next.delete(groupId)
+      } else {
+        next.add(groupId)
+      }
+      return next
+    })
+  }
+
   const loadMenu = useCallback(async () => {
     setStatus((current) => ({ ...current, loading: true, error: '' }))
     const supabase = await getSupabase()
     const [categoryResult, productResult] = await Promise.all([
-      supabase.from('menu_categories').select('*').order('display_order'),
-      supabase.from('menu_products').select('*').order('display_order'),
+      supabase.from('menu_categories').select('*').order('name'),
+      supabase.from('menu_products').select('*').order('name'),
     ])
 
     if (categoryResult.error || productResult.error) {
@@ -311,7 +397,6 @@ function AdminPage() {
       description: productForm.description?.trim() || null,
       image_url: productForm.image_url?.trim() || null,
       available: productForm.available,
-      display_order: Number(productForm.display_order || 0),
     }
 
     const supabase = await getSupabase()
@@ -337,7 +422,6 @@ function AdminPage() {
     const payload = {
       name: categoryForm.name.trim(),
       slug: categoryForm.slug || slugify(categoryForm.name),
-      display_order: Number(categoryForm.display_order || 0),
     }
 
     const supabase = await getSupabase()
@@ -382,6 +466,42 @@ function AdminPage() {
     }
 
     await loadMenu()
+  }
+
+  const uploadProductImage = async (event) => {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (!file) return
+
+    if (!file.type.startsWith('image/')) {
+      setStatus({ loading: false, saving: false, uploading: false, message: '', error: 'Selecciona un archivo de imagen.' })
+      return
+    }
+
+    const maxSize = 5 * 1024 * 1024
+    if (file.size > maxSize) {
+      setStatus({ loading: false, saving: false, uploading: false, message: '', error: 'La imagen no debe superar 5 MB.' })
+      return
+    }
+
+    setStatus({ loading: false, saving: false, uploading: true, message: '', error: '' })
+
+    const extension = file.name.split('.').pop()?.toLowerCase() || 'jpg'
+    const safeName = slugify(file.name.replace(/\.[^.]+$/, '')) || 'producto'
+    const filePath = `products/${crypto.randomUUID()}-${safeName}.${extension}`
+    const supabase = await getSupabase()
+    const { error } = await supabase.storage
+      .from(PRODUCT_IMAGE_BUCKET)
+      .upload(filePath, file, { cacheControl: '31536000', upsert: false })
+
+    if (error) {
+      setStatus({ loading: false, saving: false, uploading: false, message: '', error: error.message })
+      return
+    }
+
+    const { data } = supabase.storage.from(PRODUCT_IMAGE_BUCKET).getPublicUrl(filePath)
+    setProductForm((current) => ({ ...current, image_url: data.publicUrl }))
+    setStatus({ loading: false, saving: false, uploading: false, message: 'Imagen subida.', error: '' })
   }
 
   const signOut = async () => {
@@ -449,40 +569,42 @@ function AdminPage() {
           </div>
           <div className="admin-products-list">
             {status.loading ? <p className="admin-muted">Cargando menú...</p> : null}
-            {products.map((product) => (
-              <article className="admin-product-row" key={product.id}>
-                <button
-                  className="admin-product-main"
-                  type="button"
-                  onClick={() => setProductForm(product)}
-                >
-                  <img src={product.image_url || '/favicon.svg'} alt="" />
-                  <span>
-                    <strong>{product.name}</strong>
-                    <small>{categoryById.get(product.category_id) || 'Sin categoría'}</small>
-                  </span>
-                </button>
-                <strong className="admin-price">
-                  {product.price === null ? '-' : `$${Number(product.price).toFixed(2)}`}
-                </strong>
-                <button
-                  className="admin-icon-button"
-                  type="button"
-                  onClick={() => toggleProduct(product)}
-                  aria-label={product.available ? 'Ocultar producto' : 'Mostrar producto'}
-                >
-                  {product.available ? <Eye size={18} /> : <EyeOff size={18} />}
-                </button>
-                <button
-                  className="admin-icon-button danger"
-                  type="button"
-                  onClick={() => deleteProduct(product.id)}
-                  aria-label="Eliminar producto"
-                >
-                  <Trash2 size={18} aria-hidden="true" />
-                </button>
-              </article>
-            ))}
+            {groupedProducts.map((group) => {
+              const isExpanded = expandedCategoryIds.has(group.id)
+
+              return (
+                <section className="admin-product-group" key={group.id}>
+                  <button
+                    className="admin-product-group-heading"
+                    type="button"
+                    onClick={() => toggleCategoryGroup(group.id)}
+                    aria-expanded={isExpanded}
+                  >
+                    <span className="admin-product-group-title">
+                      {isExpanded ? (
+                        <ChevronDown size={18} aria-hidden="true" />
+                      ) : (
+                        <ChevronRight size={18} aria-hidden="true" />
+                      )}
+                      <h3>{group.name}</h3>
+                    </span>
+                    <span className="admin-product-group-count">{group.products.length}</span>
+                  </button>
+                  {isExpanded
+                    ? group.products.map((product) => (
+                        <ProductRow
+                          categoryName={categoryById.get(product.category_id) || 'Sin categoría'}
+                          key={product.id}
+                          product={product}
+                          onDelete={deleteProduct}
+                          onEdit={setProductForm}
+                          onToggle={toggleProduct}
+                        />
+                      ))
+                    : null}
+                </section>
+              )
+            })}
           </div>
         </div>
 
@@ -491,7 +613,9 @@ function AdminPage() {
             categories={categories}
             form={productForm}
             saving={status.saving}
+            uploading={status.uploading}
             onChange={(patch) => setProductForm((current) => ({ ...current, ...patch }))}
+            onImageUpload={uploadProductImage}
             onNew={() => setProductForm(emptyProduct)}
             onSubmit={saveProduct}
           />
@@ -508,7 +632,7 @@ function AdminPage() {
             {categories.map((category) => (
               <button key={category.id} type="button" onClick={() => setCategoryForm(category)}>
                 <span>{category.name}</span>
-                <small>Orden {category.display_order}</small>
+                <small>{category.slug}</small>
               </button>
             ))}
           </div>

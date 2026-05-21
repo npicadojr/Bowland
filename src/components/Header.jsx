@@ -183,7 +183,7 @@ function Header({ activeView, children, setView }) {
 
   return (
     <>
-      <header className="site-header">
+      <header className={`site-header${activeView === 'admin' ? ' admin-site-header' : ''}`}>
         <button
           className="brand-link"
           type="button"

@@ -64,3 +64,33 @@ create policy "menu admins read admin list"
   on menu_admins for select
   to authenticated
   using (is_menu_admin());
+
+insert into storage.buckets (id, name, public)
+values ('menu-product-images', 'menu-product-images', true)
+on conflict (id) do update
+set public = excluded.public;
+
+drop policy if exists "public read menu product images" on storage.objects;
+drop policy if exists "menu admins upload product images" on storage.objects;
+drop policy if exists "menu admins update product images" on storage.objects;
+drop policy if exists "menu admins delete product images" on storage.objects;
+
+create policy "public read menu product images"
+  on storage.objects for select
+  using (bucket_id = 'menu-product-images');
+
+create policy "menu admins upload product images"
+  on storage.objects for insert
+  to authenticated
+  with check (bucket_id = 'menu-product-images' and public.is_menu_admin());
+
+create policy "menu admins update product images"
+  on storage.objects for update
+  to authenticated
+  using (bucket_id = 'menu-product-images' and public.is_menu_admin())
+  with check (bucket_id = 'menu-product-images' and public.is_menu_admin());
+
+create policy "menu admins delete product images"
+  on storage.objects for delete
+  to authenticated
+  using (bucket_id = 'menu-product-images' and public.is_menu_admin());
